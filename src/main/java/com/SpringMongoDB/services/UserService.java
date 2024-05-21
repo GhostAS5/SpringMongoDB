@@ -26,8 +26,8 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public Mono<User> update(String id, User user){
-        return findById(id).flatMap(userForUpdate -> {
+    public Mono<User> update(User user){
+        return findById(user.getId()).flatMap(userForUpdate -> {
             if (StringUtils.hasText(user.getUsername())){
                 userForUpdate.setUsername(user.getUsername());
             }

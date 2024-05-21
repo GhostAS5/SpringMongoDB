@@ -1,9 +1,9 @@
 package com.SpringMongoDB.web.controllers;
 
 import com.SpringMongoDB.mapper.UserMapper;
-import com.SpringMongoDB.model.User;
 import com.SpringMongoDB.services.UserService;
 import com.SpringMongoDB.web.dto.UserRequest;
+import com.SpringMongoDB.web.dto.UserResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,26 +19,30 @@ public class UserController {
     private final UserMapper userMapper;
 
     @GetMapping
-    public Flux<User> getAllUsers() {
-        return userService.findAll();
+    public Flux<UserResponse> getAllUsers() {
+        return userService.findAll()
+                .map(userMapper::userToUserResponse);
     }
 
     @GetMapping("/{id}")
-    public Mono<ResponseEntity<User>> getUserById(@PathVariable String id) {
+    public Mono<ResponseEntity<UserResponse>> getUserById(@PathVariable String id) {
         return userService.findById(id)
+                .map(userMapper::userToUserResponse)
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
     @PostMapping
-    public Mono<ResponseEntity<User>> createUser(@RequestBody UserRequest request) {
+    public Mono<ResponseEntity<UserResponse>> createUser(@RequestBody UserRequest request) {
         return userService.save(userMapper.userRequestToUser(request))
+                .map(userMapper::userToUserResponse)
                 .map(ResponseEntity::ok);
     }
 
     @PutMapping("/{id}")
-    public Mono<ResponseEntity<User>> updateUser(@PathVariable String id, @RequestBody UserRequest request) {
-        return userService.update(id, userMapper.userRequestToUser(request))
+    public Mono<ResponseEntity<UserResponse>> updateUser(@PathVariable String id, @RequestBody UserRequest request) {
+        return userService.update(userMapper.userRequestToUser(id, request))
+                .map(userMapper::userToUserResponse)
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
