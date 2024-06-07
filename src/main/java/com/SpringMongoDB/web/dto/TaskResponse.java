@@ -1,19 +1,16 @@
-package com.SpringMongoDB.model;
+package com.SpringMongoDB.web.dto;
 
+import com.SpringMongoDB.model.TaskStatus;
+import com.SpringMongoDB.model.User;
 import lombok.Data;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.ReadOnlyProperty;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 
 @Data
-@Document(collection = "tasks")
-public class Task {
+public class TaskResponse {
 
-    @Id
     private String id;
 
     private String name;
@@ -32,17 +29,9 @@ public class Task {
 
     private Set<String> observerIds = new HashSet<>();
 
-    @ReadOnlyProperty
     private User author;
 
-    @ReadOnlyProperty
     private User assignee;
 
-    @ReadOnlyProperty
     private Set<User> observers = new HashSet<>();
-
-    public void addObserver(String observerId, User observer) {
-        observerIds.add(observerId);
-        observers.add(observer);
-    }
 }

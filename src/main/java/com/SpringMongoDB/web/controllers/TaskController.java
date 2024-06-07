@@ -1,11 +1,12 @@
 package com.SpringMongoDB.web.controllers;
 
 import com.SpringMongoDB.mapper.TaskMapper;
-import com.SpringMongoDB.model.Task;
 import com.SpringMongoDB.services.TaskService;
 import com.SpringMongoDB.web.dto.TaskRequest;
+import com.SpringMongoDB.web.dto.TaskResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -20,32 +21,47 @@ public class TaskController {
     private final TaskMapper mapper;
 
     @GetMapping
-    public Flux<Task> getAllUsers() {
-        return taskService.findAll();
+    public Flux<TaskResponse> getAllTasks() {
+        return taskService.findAll().map(mapper::taskToTaskResponse);
     }
 
     @GetMapping("/{id}")
-    public Mono<ResponseEntity<Task>> getUserById(@PathVariable String id) {
+    public Mono<ResponseEntity<TaskResponse>> getTaskById(@PathVariable String id) {
         return taskService.findById(id)
+                .map(mapper::taskToTaskResponse)
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
     @PostMapping
-    public Mono<ResponseEntity<Task>> createUser(@RequestBody TaskRequest request) {
+    @PreAuthorize("hasRole('ROLE_MODERATOR')")
+    public Mono<ResponseEntity<TaskResponse>> createTask(@RequestBody TaskRequest request) {
         return taskService.save(mapper.taskRequestToTask(request))
+                .map(mapper::taskToTaskResponse)
                 .map(ResponseEntity::ok);
     }
 
     @PutMapping("/{id}")
-    public Mono<ResponseEntity<Task>> updateUser(@PathVariable String id, @RequestBody Task task) {
-        return taskService.update(id, task)
+    @PreAuthorize("hasRole('ROLE_MODERATOR')")
+    public Mono<ResponseEntity<TaskResponse>> updateTask(@PathVariable String id, @RequestBody TaskRequest request) {
+        return taskService.update(mapper.taskRequestToTask(id, request))
+                .map(mapper::taskToTaskResponse)
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
+    @PutMapping("/{taskId}/{observerId}")
+    public Mono<ResponseEntity<TaskResponse>> addObserver(@PathVariable String taskId, @PathVariable String observerId) {
+        return taskService.addObserver(taskId, observerId)
+                .map(mapper::taskToTaskResponse)
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.notFound().build());
+    }
+
+
     @DeleteMapping("/{id}")
-    public Mono<ResponseEntity<Void>> deleteUser(@PathVariable String id) {
+    @PreAuthorize("hasRole('ROLE_MODERATOR')")
+    public Mono<ResponseEntity<Void>> deleteTask(@PathVariable String id) {
         return taskService.deleteById(id).then(Mono.just(ResponseEntity.noContent().build()));
     }
 }
